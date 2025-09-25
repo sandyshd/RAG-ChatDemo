@@ -1,0 +1,281 @@
+.citation-tab-title {
+  display: inline-block;
+  max-width: 120px;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Loading spinner styles */
+#loadingIndicator {
+  background: rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.5rem 0.5rem;
+  font-size: 1.1rem;
+  color: #2563eb;
+  min-height: 80px;
+  z-index: 10;
+}
+.citation-tab-btn {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 180px;
+  text-align: left;
+}
+.citation-card {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+/* Chat row alignment and spacing */
+.chat-row {
+  display: flex;
+  width: 100%;
+  margin-bottom: 1.2rem;
+}
+.chat-row-user {
+  justify-content: flex-end;
+}
+.chat-row-ai {
+  justify-content: flex-start;
+}
+.chat-bubble {
+  max-width: 600px;
+  min-width: 220px;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+.chat-user {
+  margin-right: 0;
+  margin-left: auto;
+}
+.chat-ai {
+  margin-left: 0;
+  margin-right: auto;
+}
+.chat-avatar {
+  align-self: flex-end;
+}
+.citation-tabs {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.citation-tab-btn {
+  margin-bottom: 0.25rem;
+}
+/* Professional Chat App Styles */
+
+body {
+  background: #f4f6fa;
+  color: #222;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.sidebar-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: none;
+  padding: 0;
+}
+.sidebar-header {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  font-size: 1.1rem;
+}
+.sidebar-body {
+  padding: 1rem;
+}
+.analytics-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.analytics-label {
+  color: #555;
+  font-weight: 500;
+}
+.analytics-value {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.chat-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 1.5rem;
+}
+
+#chat-container {
+  min-height: 400px;
+  margin-bottom: 1rem;
+}
+.chat-bubble {
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 1rem 1.25rem;
+  max-width: 80%;
+  background: #fff;
+  position: relative;
+}
+.chat-user {
+  background: #e3f0ff;
+  margin-left: auto;
+  border: 1px solid #b6d4fe;
+}
+.chat-ai {
+  background: #f8fafc;
+  margin-right: auto;
+  border: 1px solid #e0e7ef;
+}
+.chat-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: #fff;
+}
+.chat-meta {
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+.chat-role {
+  font-weight: 600;
+  color: #2563eb;
+}
+.chat-content {
+  font-size: 1.05rem;
+  color: #222;
+  margin-bottom: 0.5rem;
+}
+.chat-tokens {
+  font-size: 0.9rem;
+}
+
+.chat-input-form {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1rem;
+}
+.chat-input {
+  border-radius: 8px;
+  border: 1px solid #b6d4fe;
+  background: #f4f8ff;
+}
+.chat-send-btn {
+  background: #2563eb;
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem 2rem;
+  border-radius: 8px;
+}
+.chat-send-btn:hover {
+  background: #1746a2;
+}
+
+/* Citations */
+.citations-section {
+  margin-top: 1rem;
+}
+.citation-tabs {
+  background: #f4f6fa;
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+}
+.citation-tab-btn {
+  color: #2563eb;
+  font-weight: 500;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.25rem;
+  background: #e3f0ff;
+  border: none;
+  transition: background 0.2s, color 0.2s;
+}
+.citation-tab-btn.active, .citation-tab-btn:focus {
+  background: #2563eb;
+  color: #fff;
+}
+.citation-tab-content {
+  background: #fff;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+.citation-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  margin-bottom: 0.5rem;
+}
+.citation-title {
+  color: #1746a2;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+.citation-title:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+.citation-snippet {
+  color: #333;
+  font-size: 0.98rem;
+}
+.citation-img {
+  max-width: 320px;
+  max-height: 220px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border: 1px solid #e0e7ef;
+}
+.citation-accordion {
+  margin-top: 1rem;
+}
+.citation-accordion-btn {
+  background: #e3f0ff;
+  color: #2563eb;
+  font-weight: 500;
+  border-radius: 8px;
+}
+.citation-accordion-btn.collapsed {
+  background: #fff;
+  color: #1746a2;
+}
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

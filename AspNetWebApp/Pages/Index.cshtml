@@ -1,0 +1,190 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <!-- Sidebar -->
+        <div class="sidebar-card mb-4">
+            <div class="sidebar-header">Settings</div>
+            <div class="sidebar-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="SystemPrompt" class="form-label">System Prompt</label>
+                        <textarea class="form-control" id="SystemPrompt" name="SystemPrompt" rows="3">@Model.SystemPrompt</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="MaxResponse" class="form-label">Max Response Tokens</label>
+                        <input type="number" class="form-control" id="MaxResponse" name="MaxResponse" value="@Model.MaxResponse" min="1" max="4096" />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+                </form>
+            </div>
+        </div>
+        <div class="sidebar-card mb-4">
+            <div class="sidebar-header">Analytics</div>
+            <div class="sidebar-body">
+                <div class="analytics-row"><span class="analytics-label">Total Tokens:</span> <span class="analytics-value" id="totalTokens">@Model.TotalTokens</span></div>
+                <div class="analytics-row"><span class="analytics-label">Prompt Tokens:</span> <span class="analytics-value" id="promptTokens">@Model.PromptTokens</span></div>
+                <div class="analytics-row"><span class="analytics-label">Completion Tokens:</span> <span class="analytics-value" id="completionTokens">@Model.CompletionTokens</span></div>
+                <small class="text-muted">Token analytics are tracked per response.</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h2 class="chat-title">Azure Open AI RAG On Your Data Demo App</h2>
+        <div id="chat-container">
+            @if (Model.ChatHistory != null && Model.ChatHistory.Count > 0)
+            {
+                foreach (var message in Model.ChatHistory)
+                {
+                    <div class="chat-row @(message.Role == "User" ? "chat-row-user" : "chat-row-ai")">
+                        <div class="chat-bubble @(message.Role == "User" ? "chat-user" : "chat-ai") mb-3">
+                            <div class="d-flex align-items-start @(message.Role == "User" ? "flex-row-reverse" : "")">
+                                <img src="@message.AvatarUrl" alt="avatar" class="chat-avatar me-2" />
+                                <div class="flex-grow-1">
+                                    <div class="chat-meta mb-1">
+                                        <span class="chat-role">@message.Role</span>
+                                    </div>
+                                    <div class="chat-content">@Html.Raw(message.HtmlContent)</div>
+                                    @if (message.Role == "AI")
+                                    {
+                                        <div class="chat-tokens text-muted small mt-1">Tokens: <span class="badge bg-info">N/A</span></div>
+                                    }
+                                    @if (message.Citations != null && message.Citations.Count > 0)
+                                    {
+                                        <div class="citations-section mt-3">
+                                            <span class="fw-bold">Citations:</span>
+                                            @if (message.Citations.Count > 1)
+                                            {
+                                                <ul class="nav nav-pills citation-tabs mb-2 flex-wrap" id="citationTabs-@message.GetHashCode()" role="tablist">
+                                                    @for (int i = 0; i < message.Citations.Count; i++)
+                                                    {
+                                                        var citation = message.Citations[i];
+                                                        <li class="nav-item" role="presentation">
+                                                            <button class="nav-link citation-tab-btn @(i == 0 ? "active" : "")" id="tab-@message.GetHashCode()-@i" data-bs-toggle="tab" data-bs-target="#tab-pane-@message.GetHashCode()-@i" type="button" role="tab" aria-controls="tab-pane-@message.GetHashCode()-@i" aria-selected="@(i == 0 ? "true" : "false")" title="@citation.Title">
+                                                                <i class="bi bi-file-earmark-text me-1"></i><span class="citation-tab-title">@citation.Title</span>
+                                                            </button>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                                <div class="tab-content citation-tab-content" id="citationTabsContent-@message.GetHashCode()">
+                                                    @for (int i = 0; i < message.Citations.Count; i++)
+                                                    {
+                                                        var citation = message.Citations[i];
+                                                        <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="tab-pane-@message.GetHashCode()-@i" role="tabpanel" aria-labelledby="tab-@message.GetHashCode()-@i">
+                                                            <div class="citation-card p-3">
+                                                                <a href="@citation.FilePath" target="_blank" class="citation-title"><strong>@citation.Title</strong></a>
+                                                                <div class="citation-snippet mt-2">
+                                                                    @if (!string.IsNullOrWhiteSpace(citation.Snippet))
+                                                                    {
+                                                                        var base64Pattern = @"^[A-Za-z0-9+/=]{40,}$";
+                                                                        if (System.Text.RegularExpressions.Regex.IsMatch(citation.Snippet.Trim(), base64Pattern))
+                                                                        {
+                                                                            // Do not render base64 string
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            @citation.Snippet
+                                                                        }
+                                                                    }
+                                                                </div>
+                                                                @if (citation.ImageUrls != null && citation.ImageUrls.Count > 0)
+                                                                {
+                                                                    <div class="citation-images mt-2">
+                                                                        @foreach (var img in citation.ImageUrls)
+                                                                        {
+                                                                            var isImage = img != null && (img.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".webp", StringComparison.OrdinalIgnoreCase));
+                                                                            if (isImage)
+                                                                            {
+                                                                                <img id="@($"img-error-{message.GetHashCode()}-{i}-{citation.ImageUrls.IndexOf(img)}")" src="@Url.Page("/Index", "BlobImage", new { blobPath = Model.GetBlobPathFromUrl(img) })" alt="citation image" class="citation-img me-2 mb-2" 
+                                                                                    onerror="this.style.display='none'; document.getElementById('@($"img-error-{message.GetHashCode()}-{i}-{citation.ImageUrls.IndexOf(img)}")-label').innerText='Failed to load image: @img'; console.error('Failed to load image:', '@img');" 
+                                                                                    onload="console.log('Successfully loaded image:', '@img');" />
+                                                                                <label id="@($"img-error-{message.GetHashCode()}-{i}-{citation.ImageUrls.IndexOf(img)}")-label" class="text-danger small"></label>
+                                                                            }
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="accordion citation-accordion" id="citationAccordion-@message.GetHashCode()">
+                                                    <div class="accordion-item">
+                                                        <h2 class="accordion-header" id="heading-@message.GetHashCode()">
+                                                            <button class="accordion-button collapsed citation-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@message.GetHashCode()" aria-expanded="false" aria-controls="collapse-@message.GetHashCode()">
+                                                                <i class="bi bi-file-earmark-text me-1"></i>@message.Citations[0].Title
+                                                            </button>
+                                                        </h2>
+                                                        <div id="collapse-@message.GetHashCode()" class="accordion-collapse collapse" aria-labelledby="heading-@message.GetHashCode()" data-bs-parent="#citationAccordion-@message.GetHashCode()">
+                                                            <div class="accordion-body citation-card">
+                                                                <a href="@message.Citations[0].FilePath" target="_blank" class="citation-title"><strong>@message.Citations[0].Title</strong></a>
+                                                                <div class="citation-snippet mt-2">@message.Citations[0].Snippet</div>
+                                                                @if (message.Citations[0].ImageUrls != null && message.Citations[0].ImageUrls.Count > 0)
+                                                                {
+                                                                    <div class="citation-images mt-2">
+                                                                        @foreach (var img in message.Citations[0].ImageUrls)
+                                                                        {
+                                                                            var isImage = img != null && (img.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) || img.EndsWith(".webp", StringComparison.OrdinalIgnoreCase));
+                                                                            if (isImage)
+                                                                            {
+                                                                                <img id="@($"img-error-single-{message.GetHashCode()}-{message.Citations[0].ImageUrls.IndexOf(img)}")" src="@Url.Page("/Index", "BlobImage", new { blobPath = Model.GetBlobPathFromUrl(img) })" alt="citation image" class="citation-img me-2 mb-2" 
+                                                                                    onerror="this.style.display='none'; document.getElementById('@($"img-error-single-{message.GetHashCode()}-{message.Citations[0].ImageUrls.IndexOf(img)}")-label').innerText='Failed to load image: @img'; console.error('Failed to load image:', '@img');" 
+                                                                                    onload="console.log('Successfully loaded image:', '@img');" />
+                                                                                <label id="@($"img-error-single-{message.GetHashCode()}-{message.Citations[0].ImageUrls.IndexOf(img)}")-label" class="text-danger small"></label>
+                                                                            }
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <form method="post" class="chat-input-form mt-4" id="chatForm">
+            <div class="mb-3">
+                <label for="UserInput" class="form-label">Type a new question...</label>
+                <textarea class="form-control chat-input" id="UserInput" name="UserInput" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success chat-send-btn" id="chatSendBtn">Send</button>
+        </form>
+        <div id="loadingIndicator" style="display:none;" class="text-center mt-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Processing...</span>
+            </div>
+            <div class="mt-2">Generating response...</div>
+        </div>
+</div>
+
+<script>
+// Submit chat on Enter (without Shift)
+document.getElementById('UserInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('chatSendBtn').click();
+    }
+});
+
+// Show loading indicator on chat submit
+document.getElementById('chatForm').addEventListener('submit', function(e) {
+    document.getElementById('loadingIndicator').style.display = 'block';
+});
+</script>
+    </div>
+</div>
