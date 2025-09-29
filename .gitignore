@@ -1,0 +1,9 @@
+# Ignore build output
+bin/
+obj/
+.vs/
+
+# Ignore user secrets and local settings
+appsettings.json
+appsettings.Development.json
+AspNetWebApp/Properties/launchSettings.json
