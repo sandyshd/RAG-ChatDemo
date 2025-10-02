@@ -87,14 +87,41 @@ namespace AspNetWebApp.Pages
 
                 // Detect language (simple heuristic)
                 string detectedLanguage = DetectLanguage(UserInput);
+                _logger.LogInformation($"Detected language: {detectedLanguage} for input: {UserInput.Substring(0, Math.Min(50, UserInput.Length))}...");
+
+                // Translate Spanish input to English for search
+                string searchQuery = UserInput;
+                if (detectedLanguage == "es")
+                {
+                    _logger.LogInformation("Translating Spanish input to English for search...");
+                    searchQuery = await TranslateToEnglish(UserInput);
+                    _logger.LogInformation($"Translated query: {searchQuery}");
+                }
+
+                // Adjust system prompt based on detected language
+                string languageAwarePrompt = SystemPrompt;
+                if (detectedLanguage == "es")
+                {
+                    languageAwarePrompt += " You are an AI assistant that helps people find information. Please respond in Spanish.";
+                }
 
                 // Prepare request to Azure OpenAI with Azure Search data source
+                // Determine query type - use semantic if vector_semantic_hybrid is set but no embedding endpoint
+                var queryType = _searchOptions.QueryType ?? "simple";
+                if (queryType.Contains("vector", StringComparison.OrdinalIgnoreCase) || 
+                    queryType.Contains("hybrid", StringComparison.OrdinalIgnoreCase))
+                {
+                    // For vector/hybrid search, fall back to semantic search if no embedding endpoint
+                    _logger.LogWarning($"QueryType '{queryType}' requires embedding endpoint. Falling back to 'semantic' search.");
+                    queryType = "semantic";
+                }
+
                 var requestBody = new
                 {
                     messages = new[]
                     {
-                        new { role = "system", content = SystemPrompt },
-                        new { role = "user", content = UserInput }
+                        new { role = "system", content = languageAwarePrompt },
+                        new { role = "user", content = searchQuery }
                     },
                     max_tokens = MaxResponse,
                     data_sources = new[]
@@ -112,11 +139,10 @@ namespace AspNetWebApp.Pages
                                     key = _searchOptions.ApiKey
                                 },
                                 semantic_configuration = _searchOptions.SemanticConfiguration,
-                                query_type = _searchOptions.QueryType ?? "simple",
+                                query_type = queryType,
                                 in_scope = true,
                                 strictness = 3,
-                                top_n_documents = 5,
-                                // query_language removed: not supported by API
+                                top_n_documents = 5
                             }
                         }
                     }
@@ -331,6 +357,53 @@ namespace AspNetWebApp.Pages
             HttpContext.Session.SetInt32(TotalTokensSessionKey, TotalTokens);
             HttpContext.Session.SetInt32(PromptTokensSessionKey, PromptTokens);
             HttpContext.Session.SetInt32(CompletionTokensSessionKey, CompletionTokens);
+        }
+
+        // Translate Spanish text to English using Azure OpenAI
+        private async Task<string> TranslateToEnglish(string spanishText)
+        {
+            try
+            {
+                var httpClient = HttpClientSingleton.Instance;
+                var endpoint = _openAiOptions.Endpoint?.TrimEnd('/') + "/openai/deployments/" + _openAiOptions.Deployment + "/chat/completions?api-version=" + _openAiOptions.ApiVersion;
+                
+                var translationRequest = new
+                {
+                    messages = new[]
+                    {
+                        new { role = "system", content = "You are a translator. Translate the following Spanish text to English. Only return the English translation, nothing else." },
+                        new { role = "user", content = spanishText }
+                    },
+                    max_tokens = 500,
+                    temperature = 0.3
+                };
+
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Add("api-key", _openAiOptions.Key);
+                request.Content = new StringContent(JsonSerializer.Serialize(translationRequest), Encoding.UTF8, "application/json");
+                
+                var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+                    var choices = root.GetProperty("choices");
+                    if (choices.GetArrayLength() > 0)
+                    {
+                        var message = choices[0].GetProperty("message");
+                        var translation = message.GetProperty("content").GetString();
+                        return translation ?? spanishText;
+                    }
+                }
+                _logger.LogWarning("Translation failed, using original text");
+                return spanishText;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error translating text to English");
+                return spanishText;
+            }
         }
 
         // Simple language detection: returns "es" for Spanish, "en" for English (default)
