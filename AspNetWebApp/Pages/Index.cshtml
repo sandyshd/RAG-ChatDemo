@@ -163,7 +163,10 @@
                 <label for="UserInput" class="form-label">Type a new question...</label>
                 <textarea class="form-control chat-input" id="UserInput" name="UserInput" rows="3"></textarea>
             </div>
-            <button type="submit" class="btn btn-success chat-send-btn" id="chatSendBtn">Send</button>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success chat-send-btn" id="chatSendBtn">Send</button>
+                <button type="submit" class="btn btn-danger" formaction="/?handler=ClearChat" onclick="return confirm('Are you sure you want to clear the chat history?');">Clear Chat</button>
+            </div>
         </form>
         <div id="loadingIndicator" style="display:none;" class="text-center mt-3">
             <div class="spinner-border text-primary" role="status">

@@ -7,3 +7,7 @@ obj/
 appsettings.json
 appsettings.Development.json
 AspNetWebApp/Properties/launchSettings.json
+
+# Ignore VS Code settings
+.vscode/settings.json
+.vscode/tasks.json

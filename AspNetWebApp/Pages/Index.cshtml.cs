@@ -67,6 +67,27 @@ namespace AspNetWebApp.Pages
             LoadSession();
         }
 
+        public IActionResult OnPostClearChat()
+        {
+            // Clear the session data
+            HttpContext.Session.Remove(ChatHistorySessionKey);
+            HttpContext.Session.Remove(SystemPromptSessionKey);
+            HttpContext.Session.Remove(MaxResponseSessionKey);
+            HttpContext.Session.Remove(TotalTokensSessionKey);
+            HttpContext.Session.Remove(PromptTokensSessionKey);
+            HttpContext.Session.Remove(CompletionTokensSessionKey);
+            
+            // Reset to defaults
+            ChatHistory = new();
+            SystemPrompt = "You are an AI assistant that helps people find information.";
+            MaxResponse = 800;
+            TotalTokens = 0;
+            PromptTokens = 0;
+            CompletionTokens = 0;
+            
+            return RedirectToPage();
+        }
+
         public async Task<IActionResult> OnPost()
         {
             LoadSession();
