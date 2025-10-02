@@ -431,11 +431,38 @@ namespace AspNetWebApp.Pages
         private string DetectLanguage(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return "en";
-            // Naive check for common Spanish words/characters
-            string[] spanishWords = { "el", "la", "de", "que", "y", "en", "un", "ser", "se", "no", "haber", "por", "con", "su", "para", "como", "estar", "tener", "le", "lo", "lo", "más", "pero", "sus", "yo", "ya", "o", "este", "sí", "porque", "esta", "entre", "cuando", "muy", "sin", "sobre", "también", "me", "hasta", "hay", "donde", "quien", "desde", "todo", "nos", "durante", "todos", "uno", "les", "ni", "contra", "otros", "ese", "eso", "ante", "ellos", "e", "esto", "mí", "antes", "algunos", "qué", "unos", "yo", "otro", "otras", "otra", "él", "tanto", "esa", "estos", "mucho", "quienes", "nada", "muchos", "cual", "poco", "ella", "estar", "estas", "algunas", "algo", "nosotros", "mi", "mis", "tú", "te", "ti", "tu", "tus", "ellas", "nosotras", "vosotros", "vosotras", "os", "mío", "mía", "míos", "mías", "tuyo", "tuya", "tuyos", "tuyas", "suyo", "suya", "suyos", "suyas", "nuestro", "nuestra", "nuestros", "nuestras", "vuestro", "vuestra", "vuestros", "vuestras", "esos", "esas", "estoy", "estás", "está", "estamos", "estáis", "están", "esté", "estés", "estemos", "estéis", "estén", "estaré", "estarás", "estará", "estaremos", "estaréis", "estarán", "estaría", "estarías", "estaríamos", "estaríais", "estarían", "estaba", "estabas", "estábamos", "estabais", "estaban", "estuve", "estuviste", "estuvo", "estuvimos", "estuvisteis", "estuvieron", "estuviera", "estuvieras", "estuviéramos", "estuvierais", "estuvieran", "estuviese", "estuvieses", "estuviésemos", "estuvieseis", "estuviesen", "estando", "estado", "estada", "estados", "estadas", "estad" };
-            int matches = spanishWords.Count(w => text.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0);
-            if (matches > 2 || text.Any(c => "áéíóúñü¿¡".Contains(c)))
+            
+            // First check for Spanish-specific characters - strong indicator
+            if (text.Any(c => "áéíóúñü¿¡".Contains(c)))
                 return "es";
+            
+            // Use word boundary matching to avoid false positives
+            // Focus on distinctive Spanish words that are less likely to appear in English
+            string[] distinctiveSpanishWords = { 
+                @"\b(qué|quién|cuál|cómo|dónde|cuándo|por qué)\b",  // Question words
+                @"\b(está|están|estoy|estás|estamos)\b",             // Common "estar" forms
+                @"\b(también|además|pero|porque)\b",                 // Common connectors
+                @"\b(muy|más|menos|mucho|poco)\b",                   // Quantity/degree
+                @"\b(puedo|puedes|puede|pueden|podemos)\b",          // "poder" forms
+                @"\b(hacer|hago|hace|hacen)\b",                      // "hacer" forms
+                @"\b(mostrar|muestra|muestro|muestras)\b",           // "mostrar" forms
+                @"\b(necesito|necesitas|necesita|necesitamos)\b",    // "necesitar" forms
+                @"\b(dirección|información|aplicación)\b"            // Common -ción words
+            };
+            
+            int matches = 0;
+            foreach (var pattern in distinctiveSpanishWords)
+            {
+                if (System.Text.RegularExpressions.Regex.IsMatch(text, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    matches++;
+                }
+            }
+            
+            // Require at least 2 distinctive Spanish word patterns for Spanish detection
+            if (matches >= 2)
+                return "es";
+            
             return "en";
         }
     }
